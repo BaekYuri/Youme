@@ -1,6 +1,6 @@
 const express = require('express')
 const bcrypt = require('bcrypt')
-const { User } = require('../models')
+const { User, UsersYoume } = require('../models')
 const passport = require('passport')
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares')
 
@@ -74,7 +74,7 @@ router.post('/join', isNotLoggedIn, async (req, res, next) => { // POST /user/jo
       return res.redirect('/join?error=exist')
     }
     const hashedPassword = await bcrypt.hash(password, 12)
-    await User.create({
+    const result = await User.create({
       name,
       email,
       nickname,
@@ -85,6 +85,11 @@ router.post('/join', isNotLoggedIn, async (req, res, next) => { // POST /user/jo
       main_address,
       sub_address,
       phone_number
+    })
+    await UsersYoume.create({
+      UserId: result.dataValues.id,
+      connectedYoume:false,
+      connectedSpeaker:false
     })
     return res.status(201).send('ok')
   } catch (error) {

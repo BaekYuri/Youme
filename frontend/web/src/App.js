@@ -21,6 +21,10 @@ import CreateChallenge from './pages/Challenge/CreateChallenge';
 import SearchChallenge from './pages/Challenge/SearchChallenge';
 import MoreChallenges from './pages/Challenge/ChallengeMore';
 import Profile from './pages/Profile/';
+import YoumeSetting from './pages/YoumeSetting'
+import SpeakerRecognization from './pages/SpeakerRecognization'
+import ConnectYoume from './pages/ConnectYoume'
+import ManageYoume from './pages/ManageYoume'
 // import MirrorSetting from './pages/MirrorSetting/';
 import Auth from './pages/Auth/';
 // import ChangePassword from './pages/ChangePassword'
@@ -59,7 +63,10 @@ const Routers = () => {
                   <Route path="/Profile" component={Profile} />
                   <Route path="/Challenge/:challengeId" component={ChallengeDetail} />
                   <Route path="/ChallengeDashboard/:challengeId" component={ChallengeDashboard} />
-                  <Redirect to="/not-found" />
+                  <Route path="/YoumeSetting" component={YoumeSetting} />
+                  <Route path="/ManageYoume" component={ManageYoume}/>
+                  <Route path="/ConnectYoume" component={ConnectYoume}/>
+                  <Route path="/SpeakerRecognization" component={SpeakerRecognization}/>
               </Switch>
   )
 }

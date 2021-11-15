@@ -13,6 +13,7 @@ const redis = require('redis')
 const RedisStore = require('connect-redis')(session)
 const { swaggerUI, specs } = require('./modules/swagger')
 
+
 dotenv.config()
 const redisClient = redis.createClient({
   url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
@@ -29,6 +30,50 @@ const routinizedHabitRouter = require('./routes/routinizedHabit')
 const habitRouter = require('./routes/habit')
 const scheduleRouter = require('./routes/schedule')
 const weatherRouter = require('./routes/weather')
+const UsersYoumeRouter = require('./routes/usersYoume')
+const TurtlebotPointRouter = require('./routes/turtlebotPoint')
+const http = require("http").createServer(app);
+const io = require('socket.io')(http, { cors: { origin: ['http://localhost:3000', 'https://myme.today'],credentials: true },
+allowEIO3: true,
+allowEI04: true,
+});
+
+let port=8000
+
+io.on("connection", function (socket) {
+  console.log("소켓 접속 완료");
+
+  socket.on("roomjoin", (userid) => {  //roomjoin 이벤트명으로 데이터받기 //socket.on
+    console.log(userid);
+    socket.join(userid);               //userid로 방 만들기
+  });
+
+  socket.on("turtlebot", (data) => {   
+    io.to(data.id).emit("turtlebotMode",data.data);  //turtlebot 에게 turtlebot 이라는 토픽으로 data를 보낸다.
+  });
+  
+  socket.on("goSomewhere", (data) => {   
+    io.to(data.id).emit("goSomewhere",data.data);  
+  });
+
+  socket.on("sendNowMode", (id) => {   
+    io.to(id).emit("sendNowMode");  
+  });
+
+  socket.on("getNowMode", (data) => {   
+    data = JSON.parse(data)
+    io.to(data.id).emit("getNowMode", data.data);  
+  });
+
+  socket.on("turtlebotMsg", (data) => {   
+    data = JSON.parse(data)
+    io.to(data.id).emit("getTurtlebotMsg", data.msg);  
+  });
+});                                              
+
+http.listen(port, () => {
+  console.log(`express is running on ${port}`);
+});
 
 app.set('port', process.env.PORT || 3065)
 passportConfig()
@@ -73,6 +118,7 @@ app.use(cors({
   credentials: true,
 }))
 
+
 app.use('/', indexRouter)
 app.use('/user', userRouter)
 app.use('/challenge', challengeRouter)
@@ -82,6 +128,8 @@ app.use('/routinizedHabit', routinizedHabitRouter)
 app.use('/habit', habitRouter)
 app.use('/schedule',scheduleRouter)
 app.use('/weather',weatherRouter)
+app.use('/usersYoume',UsersYoumeRouter)
+app.use('/turtlebotPoint',TurtlebotPointRouter)
 
 app.use((req, res, next) => {
   // req.data = 'wook비번' // middleware간 data 전송

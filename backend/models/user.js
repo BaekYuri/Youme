@@ -84,6 +84,7 @@ module.exports = (sequelize, DataTypes) => {
     db.User.hasMany(db.Comment)
     db.User.hasMany(db.Schedule)
     db.User.hasMany(db.ChallengeParticipation)
+    db.User.hasMany(db.UsersYoume)
     db.User.belongsToMany(db.Challenge, {
       through: 'Like',
       as: 'Liked' // 내가 좋아요를 누른 챌린지
