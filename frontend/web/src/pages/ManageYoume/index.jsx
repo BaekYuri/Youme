@@ -8,7 +8,7 @@ import {Stop, Policy, Explore, FitnessCenter, LocalCafe, KingBed, CropPortrait, 
 import { OPEN_CONFIRM_MODAL } from '../../reducers/modal';
 import { useHistory } from 'react-router';
 
-const socket = socketIOClient("http://3.37.197.133:8000/")
+const socket = socketIOClient("https://3.37.197.133:8000/")
 function App () {
   const dispatch = useDispatch()
   const history = useHistory()
