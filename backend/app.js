@@ -12,7 +12,7 @@ const hpp = require('hpp')
 const redis = require('redis')
 const RedisStore = require('connect-redis')(session)
 const { swaggerUI, specs } = require('./modules/swagger')
-
+const socketIO = require('socket.io')
 
 dotenv.config()
 const redisClient = redis.createClient({
@@ -32,48 +32,7 @@ const scheduleRouter = require('./routes/schedule')
 const weatherRouter = require('./routes/weather')
 const UsersYoumeRouter = require('./routes/usersYoume')
 const TurtlebotPointRouter = require('./routes/turtlebotPoint')
-const https = require("https").createServer(app);
-const io = require('socket.io')(https, { cors: { origin: ['http://localhost:3000', 'https://myme.today'],credentials: true },
-allowEIO3: true,
-allowEI04: true,
-});
 
-let port=8000
-
-io.on("connection", function (socket) {
-  console.log("소켓 접속 완료");
-
-  socket.on("roomjoin", (userid) => {  //roomjoin 이벤트명으로 데이터받기 //socket.on
-    console.log(userid);
-    socket.join(userid);               //userid로 방 만들기
-  });
-
-  socket.on("turtlebot", (data) => {   
-    io.to(data.id).emit("turtlebotMode",data.data);  //turtlebot 에게 turtlebot 이라는 토픽으로 data를 보낸다.
-  });
-  
-  socket.on("goSomewhere", (data) => {   
-    io.to(data.id).emit("goSomewhere",data.data);  
-  });
-
-  socket.on("sendNowMode", (id) => {   
-    io.to(id).emit("sendNowMode");  
-  });
-
-  socket.on("getNowMode", (data) => {   
-    data = JSON.parse(data)
-    io.to(data.id).emit("getNowMode", data.data);  
-  });
-
-  socket.on("turtlebotMsg", (data) => {   
-    data = JSON.parse(data)
-    io.to(data.id).emit("getTurtlebotMsg", data.msg);  
-  });
-});                                              
-
-https.listen(port, () => {
-  console.log(`express is running on ${port}`);
-});
 
 app.set('port', process.env.PORT || 3065)
 passportConfig()
@@ -153,6 +112,45 @@ app.use((err, req, res, next) => {
   res.status(500).send('에러 발생!')
 })
 
-app.listen(app.get('port'), () => {
+const server = app.listen(app.get('port'), () => {
   console.log('익스프레스 서버 실행')
 })
+const io = socketIO(server, {
+    cors: {
+    origin: ['http://localhost:3000', 'https://myme.today'],
+    credentials: true,
+  },
+  allowEIO3: true,
+  allowEI04: true,  
+});
+
+io.on("connection", function (socket) {
+  console.log("소켓 접속 완료");
+
+  socket.on("roomjoin", (userid) => {  //roomjoin 이벤트명으로 데이터받기 //socket.on
+    console.log(userid);
+    socket.join(userid);               //userid로 방 만들기
+  });
+
+  socket.on("turtlebot", (data) => {   
+    io.to(data.id).emit("turtlebotMode",data.data);  //turtlebot 에게 turtlebot 이라는 토픽으로 data를 보낸다.
+  });
+  
+  socket.on("goSomewhere", (data) => {   
+    io.to(data.id).emit("goSomewhere",data.data);  
+  });
+
+  socket.on("sendNowMode", (id) => {   
+    io.to(id).emit("sendNowMode");  
+  });
+
+  socket.on("getNowMode", (data) => {   
+    data = JSON.parse(data)
+    io.to(data.id).emit("getNowMode", data.data);  
+  });
+
+  socket.on("turtlebotMsg", (data) => {   
+    data = JSON.parse(data)
+    io.to(data.id).emit("getTurtlebotMsg", data.msg);  
+  });
+});
