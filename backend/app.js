@@ -32,8 +32,8 @@ const scheduleRouter = require('./routes/schedule')
 const weatherRouter = require('./routes/weather')
 const UsersYoumeRouter = require('./routes/usersYoume')
 const TurtlebotPointRouter = require('./routes/turtlebotPoint')
-const http = require("http").createServer(app);
-const io = require('socket.io')(http, { cors: { origin: ['http://localhost:3000', 'https://myme.today'],credentials: true },
+const https = require("https").createServer(app);
+const io = require('socket.io')(https, { cors: { origin: ['http://localhost:3000', 'https://myme.today'],credentials: true },
 allowEIO3: true,
 allowEI04: true,
 });
