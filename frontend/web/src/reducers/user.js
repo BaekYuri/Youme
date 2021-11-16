@@ -38,10 +38,14 @@ const initialState = {
   getTurtlebotPointLoading : false,
   getTurtlebotPointDone : false,
   getTurtlebotPointError : null,
+  getFamiliarityLoading: false,
+  getFamiliarityDone: false,
+  getFamiliarityError: null,
   me: null,             // 현재 로그인한 유저 정보
   isSignUp: false,      // 로그인 폼 <-> 회원가입 폼
   youmeInfo : null,
   turtlebotPoint : false,
+  familiarityLevel : 1,
 }
 
 export const UPDATE_MY_INFO_REQUEST = 'UPDATE_MY_INFO_REQUEST'
@@ -95,6 +99,11 @@ export const CLEAR_CONNECT_YOUME = 'CLEAR_CONNECT_YOUME'
 export const DISCONNECT_YOUME_REQUEST = 'DISCONNECT_YOUME_REQUEST'
 export const DISCONNECT_YOUME_SUCCESS = 'DISCONNECT_YOUME_SUCCESS'
 export const DISCONNECT_YOUME_FAILURE = 'DISCONNECT_YOUME_FAILURE'
+
+export const GET_FAMILIARITY_REQUEST = 'GET_FAMILIARITY_REQUEST'
+export const GET_FAMILIARITY_SUCCESS = 'GET_FAMILIARITY_SUCCESS'
+export const GET_FAMILIARITY_FAILURE = 'GET_FAMILIARITY_FAILURE'
+export const CLEAR_GET_FAMILIARITY = 'CLEAR_GET_FAMILIARITY'
 
 export const CHANGE_SIGN_UP_MODE = 'CHANGE_SIGN_UP_MODE'
 
@@ -316,6 +325,26 @@ const reducer = (state = initialState, action) => produce(state, (draft) => {
       draft.disconnectYoumeLoading=false
       draft.disconnectYoumeError=action.error
       break  
+    case GET_FAMILIARITY_REQUEST:
+      draft.getFamiliarityLoading=true
+      draft.getFamiliarityDone=false
+      draft.getFamiliarityError=null
+      break
+    case GET_FAMILIARITY_SUCCESS:
+      draft.getFamiliarityLoading=false
+      draft.getFamiliarityDone=true
+      draft.youmeInfo.familiarity = action.data.data.familiarity
+      draft.familiarityLevel = action.data.data.level
+      break
+    case GET_FAMILIARITY_FAILURE:
+      draft.getFamiliarityLoading=false
+      draft.getFamiliarityError=action.error
+      break
+    case CLEAR_GET_FAMILIARITY:
+      draft.getFamiliarityLoading=false
+      draft.getFamiliarityDone=false
+      draft.getFamiliarityError=null
+      break
       default:break
   }
 })

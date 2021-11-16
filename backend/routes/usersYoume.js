@@ -156,4 +156,55 @@ router.put('/disconnect', isLoggedIn, async (req, res, next)=>{
         next(error)
     }
 })
+
+router.get('/familiarity', isLoggedIn, async (req, res, next)=>{
+    try{
+        const result = await UsersYoume.findOne({
+            attributes:['familiarity'],
+            where: {UserId: req.user.id}
+        })
+        let familiarity = result.familiarity
+        let level = 1
+        if(familiarity>=5){
+            level = 2
+        }else if(familiarity>=15){
+            level = 3
+        }
+        res.status(200).send({level:level, familiarity:familiarity})
+    }catch (error) {
+        console.error(error)
+        next(error)
+    }
+})
+
+router.put('/familiarity', isLoggedIn, async (req, res, next)=>{
+    try{
+        const result = await UsersYoume.findOne({
+            attributes:['familiarity']
+        },
+        {
+            where: {UserId: req.user.id}
+        })
+        
+        const familiarity = result.familiarity + 1
+
+        await UsersYoume.update({
+            familiarity: familiarity
+        },
+        {
+            where: {UserId: req.user.id}
+        })
+        
+        let level = 1
+        if(familiarity>=5){
+            level = 2
+        }else if(familiarity>=15){
+            level = 3
+        }
+        res.status(200).send({level:level, familiarity:familiarity})
+    }catch (error) {
+        console.error(error)
+        next(error)
+    }
+})
 module.exports = router

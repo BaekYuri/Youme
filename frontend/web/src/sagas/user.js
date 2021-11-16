@@ -50,6 +50,9 @@ import {
   DISCONNECT_YOUME_REQUEST,
   DISCONNECT_YOUME_SUCCESS,
   DISCONNECT_YOUME_FAILURE,
+  GET_FAMILIARITY_REQUEST,
+  GET_FAMILIARITY_SUCCESS,
+  GET_FAMILIARITY_FAILURE,
   // CHANGE_NICKNAME_REQUEST,
   // CHANGE_NICKNAME_SUCCESS,
   // CHANGE_NICKNAME_FAILURE,
@@ -426,6 +429,24 @@ function* disconnectYoume(){
     })
   }
 }
+
+function getFamiliarityAPI(){
+  return axios.get('/usersYoume/familiarity')
+}
+function* getFamiliarity(){
+  try{
+    const result = yield call(getFamiliarityAPI)
+    yield put({
+      type:GET_FAMILIARITY_SUCCESS,
+      data : result
+    })
+  }catch(err){
+    yield put({
+      type:GET_FAMILIARITY_FAILURE,
+      error:err
+    })
+  }
+}
 // function* watchRemoveFollower() {
 //   yield takeLatest(REMOVE_FOLLOWER_REQUEST, removeFollower)
 // }
@@ -496,6 +517,10 @@ function* watchConnectYoume(){
 function* watchDisconnectYoume(){
   yield takeLatest(DISCONNECT_YOUME_REQUEST,disconnectYoume)
 }
+
+function* watchGetFamiliarity(){
+  yield takeLatest(GET_FAMILIARITY_REQUEST, getFamiliarity)
+}
 export default function* userSaga() {
   yield all([
       fork(watchLogIn),
@@ -513,6 +538,7 @@ export default function* userSaga() {
       fork(watchGetTurtlebotPoint),
       fork(watchConnectYoume),
       fork(watchDisconnectYoume),
+      fork(watchGetFamiliarity),
       // fork(watchChangeNickname),
       // fork(watchLoadFollowers),
       // fork(watchLoadFollowings),

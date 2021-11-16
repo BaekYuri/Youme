@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt')
 
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares')
 const { User } = require('../models/index')
+const { loginID } = require('../config/mapping_id')
 
 const router = express.Router()
 
@@ -18,7 +19,8 @@ router.post('/login', async (req, res, next) => {
     const isValid = await bcrypt.compare(password, user.password)
     if (!isValid) throw new Error('입력하신 정보가 올바르지 않습니다.')
     req.session.userid = user.id
-    return res.send('success!')
+    loginID[user.id] = ''
+    return res.status(200).json({id: user.id})
   } catch (error) {
     console.error(error)
     next(error)

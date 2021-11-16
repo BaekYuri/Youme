@@ -15,7 +15,7 @@ const router = express.Router()
  *      tags:
  *        - schedule
  *      description: 내 월별 일정 가져오기
- *\
+ *
  *      responses:
  *        '200':
  *          description: Success
@@ -66,17 +66,17 @@ router.get('/', isLoggedIn, async (req, res, next) => { // GET /routine
  *          application/json:
  *            schema:
  *              type: object
-    *        properties:
-    *          title:
-    *            type: string
-    *          color:
-    *            type: string
-    *          start:
-    *            type: string
-    *          end:
-    *            type: string
-    *          allDay:
-    *            type: integer
+ *        properties:
+ *          title:
+ *            type: string
+ *          color:
+ *            type: string
+ *          start:
+ *            type: string
+ *          end:
+ *            type: string
+ *          allDay:
+ *            type: integer
  *      responses:
  *        '200':
  *          description: Success
