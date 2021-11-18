@@ -9,10 +9,12 @@ import json
 import pygame
 from dateutil import parser
 
+from connection import url
+
 # user_id = 3
 headers = {'Content-Type': 'application/json; charset=utf-8'}
 # data = {'userId': user_id}
-url = 'http://112.169.87.3:8005'
+# url = 'http://112.169.87.3:8005'
 
 allSchedule = []
 todaySchedule = []

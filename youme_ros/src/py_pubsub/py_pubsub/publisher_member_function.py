@@ -4,7 +4,7 @@ from rclpy.node import Node
 import socketio
 import requests as rq
 import json
-
+import time
 from geometry_msgs.msg import Twist, PoseWithCovarianceStamped, PoseStamped , PointStamped
 from sensor_msgs.msg import LaserScan
 from action_msgs.msg import GoalStatusArray
@@ -14,22 +14,22 @@ from random import uniform
 global sio
 sio = socketio.Client(logger=True, engineio_logger=True)
 
-global ENDPOINT
-ENDPOINT = "http://172.30.1.41:3065"
-
+global ENDPOINT,SOCKET_ENDPOINT
+ENDPOINT = "https://api.myme.today"
+SOCKET_ENDPOINT ="https://k5a203.p.ssafy.io"
 global turtlebotId
-turtlebotId = "a203"
+turtlebotId = "a203a"
 
 global minimal_publisher
-global initialPose, bed, coffee, mirror, workspace #침대, 커피머신, 스마트미러, 작업공간 변수 선언
+global initialPose, initialPoseStamped, bed, coffee, mirror, workspace #침대, 커피머신, 스마트미러, 작업공간 변수 선언
 
 class MinimalPublisher(Node):
 
     def __init__(self):
         super().__init__('minimal_publisher')
 
-        sio.connect('http://172.30.1.41:8000/')
-        sio.emit("roomjoin",turtlebotId)
+        sio.connect(SOCKET_ENDPOINT,namespaces=['/a203a'])
+        sio.emit("roomjoin",turtlebotId,namespace='/a203a')
 
         self.initial_pose_publisher = self.create_publisher(PoseWithCovarianceStamped ,'initialpose',10)
         self.goal_pose_publisher = self.create_publisher(PoseStamped, 'goal_pose', 10)
@@ -48,9 +48,9 @@ class MinimalPublisher(Node):
         self.mode = 0
         self.destination = 0 #순찰모드의 목적지 0:침대 1:커피머신 2:스마트미러 3:작업공간
         self.isComplete = True #네비게이션 완료되었는지 확인하는 변수
-        self.sendMsg = -1 #이동했다는 메시지를 보내야하는지 확인하는 변수. -1:보내지 않아도 됨 0:침대 1:커피머신 2:스마트미러 3:작업공간
+        self.sendMsg = -1 #이동했다는 메시지를 보내야하는지 확인하는 변수. -1:보내지 않아도 됨 0:침대 1:커피머신 2:스마트미러 3:작업공간 
         self.free_count = 0
-        self.gym_speed = 0.15
+        self.gym_speed = 1.1
 
         self.cmd_msg = Twist()
 
@@ -153,6 +153,7 @@ class MinimalPublisher(Node):
         else:
             twist.linear.x = 0.0
             twist.angular.z = 0.0
+            print('충돌 감지!')
 
         self.cmd_publisher.publish(twist)
     def navigate_status_callback(self,data):
@@ -161,25 +162,29 @@ class MinimalPublisher(Node):
         if nowStatus==2:
             self.isComplete = False
         elif nowStatus==4 :
-            self.isComplete = True
             if self.sendMsg!=-1:
-                sio.emit("moveResult",str(self.sendMsg)+"번 장소에 도착했어요!")
+            
+                sio.emit("moveResult",{"id":turtlebotId,"destination":self.sendMsg, "status":"success"},namespace='/a203a')
                 self.sendMsg = -1
+            time.sleep(1.5)
+            self.isComplete = True
         elif nowStatus==6 :
-            self.isComplete = True
             if self.sendMsg!=-1:
-                sio.emit("moveResult",str(self.sendMsg)+"번 장소에 도착하지 못했어요!")
+                sio.emit("moveResult",{"id":turtlebotId,"destination":self.sendMsg, "status":"failure"},namespace='/a203a')
                 self.sendMsg = -1
+            time.sleep(1.5)
+            self.isComplete = True
 
 
 
 def main(args=None):
     rclpy.init(args=args)
-    global minimal_publisher, initialPose, bed, coffee, mirror, workspace, ENDPOINT
+    global minimal_publisher, initialPose,initialPoseStamped, bed, coffee, mirror, workspace, ENDPOINT
     
     rs = rq.get(ENDPOINT+"/turtlebotPoint/"+turtlebotId)
     
     initialPose = PoseWithCovarianceStamped()
+    initialPoseStamped = PoseStamped()
     bed = PoseStamped()
     coffee = PoseStamped()
     mirror = PoseStamped()
@@ -194,15 +199,23 @@ def main(args=None):
         initialPose.header.frame_id = "map"
         initialPose.pose.pose.position.x = pointInfo["initPosePositionX"]
         initialPose.pose.pose.position.y = pointInfo["initPosePositionY"]
-        initialPose.pose.pose.position.z = float(pointInfo["initPosePositionZ"])
+        initialPose.pose.pose.orientation.z = float(pointInfo["initPosePositionZ"])
         initialPose.pose.pose.orientation.w = float(pointInfo["initPoseOrientationW"])
+        
+        initialPoseStamped.header.stamp.sec = 0
+        initialPoseStamped.header.stamp.nanosec = 0
+        initialPoseStamped.header.frame_id = "map"
+        initialPoseStamped.pose.position.x = pointInfo["initPosePositionX"]
+        initialPoseStamped.pose.position.y = pointInfo["initPosePositionY"]
+        initialPoseStamped.pose.orientation.z = float(pointInfo["initPosePositionZ"])
+        initialPoseStamped.pose.orientation.w = float(pointInfo["initPoseOrientationW"])
 
         bed.header.stamp.sec = 0
         bed.header.stamp.nanosec = 0
         bed.header.frame_id = "map"
         bed.pose.position.x = pointInfo["BedPositionX"]
         bed.pose.position.y = pointInfo["BedPositionY"]
-        bed.pose.position.z = float(pointInfo["BedPositionZ"])
+        bed.pose.orientation.z = float(pointInfo["BedPositionZ"])
         bed.pose.orientation.w = float(pointInfo["BedOrientationW"])
 
         coffee.header.stamp.sec = 0
@@ -210,7 +223,7 @@ def main(args=None):
         coffee.header.frame_id = "map"
         coffee.pose.position.x = pointInfo["CoffeePositionX"]
         coffee.pose.position.y = pointInfo["CoffeePositionY"]
-        coffee.pose.position.z = float(pointInfo["CoffeePositionZ"])
+        coffee.pose.orientation.z = float(pointInfo["CoffeePositionZ"])
         coffee.pose.orientation.w = float(pointInfo["CoffeeOrientationW"])
 
         mirror.header.stamp.sec = 0
@@ -218,7 +231,7 @@ def main(args=None):
         mirror.header.frame_id = "map"
         mirror.pose.position.x = pointInfo["MirrorPositionX"]
         mirror.pose.position.y = pointInfo["MirrorPositionY"]
-        mirror.pose.position.z = float(pointInfo["MirrorPositionZ"])
+        mirror.pose.orientation.z = float(pointInfo["MirrorPositionZ"])
         mirror.pose.orientation.w = float(pointInfo["MirrorOrientationW"])
 
         workspace.header.stamp.sec = 0
@@ -226,7 +239,7 @@ def main(args=None):
         workspace.header.frame_id = "map"
         workspace.pose.position.x = pointInfo["WorkspacePositionX"]
         workspace.pose.position.y = pointInfo["WorkspacePositionY"]
-        workspace.pose.position.z = float(pointInfo["WorkspacePositionZ"])
+        workspace.pose.orientation.z = float(pointInfo["WorkspacePositionZ"])
         workspace.pose.orientation.w = float(pointInfo["WorkspaceOrientationW"])
     minimal_publisher = MinimalPublisher()
     rclpy.spin(minimal_publisher)
@@ -245,26 +258,27 @@ def connect():
 def disconnect():
     print('disconnected from server')
 
-@sio.on("turtlebotMode")
+@sio.on("turtlebotMode",namespace='/a203a')
 def turtlebot(data):
     global minimal_publisher
     minimal_publisher.mode = data
     sendNowMode()
 
-@sio.on("sendNowMode")
+@sio.on("sendNowMode",namespace='/a203a')
 def sendNowMode():
     mode = {"id": turtlebotId, "data": minimal_publisher.mode}
-    sio.emit("getNowMode",json.dumps(mode))
+    sio.emit("getNowMode",json.dumps(mode),namespace='/a203a')
 
-@sio.on("goSomewhere")
+@sio.on("goSomewhere",namespace='/a203a')
 def turtlebot(data):
     global minimal_publisher
-    global bed, coffee, mirror, workspace
+    global bed, coffee, mirror, workspace, initialPoseStamped
     minimal_publisher.mode = 4
-
+    print("socket come")
     if(minimal_publisher.isComplete is False):
         msg = {"id": turtlebotId, "msg": "아직 이동중입니다. 잠시 후 선택해주세요."}
-        sio.emit("turtlebotMsg",json.dumps(msg))
+        sio.emit("turtlebotMsg",json.dumps(msg),namespace='/a203a')
+        return
     if(data==0):
         print('침대')
         minimal_publisher.goal_pose_publisher.publish(bed)
@@ -277,6 +291,9 @@ def turtlebot(data):
     elif(data==3):
         print('작업공간')
         minimal_publisher.goal_pose_publisher.publish(workspace)
+    elif(data==4):
+        print('초기위치')
+        minimal_publisher.goal_pose_publisher.publish(initialPoseStamped)
     minimal_publisher.sendMsg = data
     sendNowMode()
 

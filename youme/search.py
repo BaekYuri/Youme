@@ -6,10 +6,12 @@ import json
 import requests
 import random
 
-user_id = 3
+from connection import url
+
+# user_id = 3
 headers = {'Content-Type': 'application/json; charset=utf-8'}
-data = {'userId': user_id}
-url = 'http://112.169.87.3:8005'
+# data = {'userId': user_id}
+# url = 'http://112.169.87.3:8005'
 
 # 검색 관련 쿼리 처리 허브
 def search_query(transcript):

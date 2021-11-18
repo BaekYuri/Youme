@@ -15,27 +15,53 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import String
+import socketio
+from sensor_msgs.msg import BatteryState
 
+import json
+
+#소켓 정의
+global sio
+sio = socketio.Client(logger=True, engineio_logger=True)
+
+
+global ENDPOINT
+ENDPOINT = "https://k5a203.p.ssafy.io/"
+
+global turtlebotId
+turtlebotId = "a203a"
+
+global minimal_subscriber
 
 class MinimalSubscriber(Node):
 
     def __init__(self):
         super().__init__('minimal_subscriber')
+
+        sio.connect(ENDPOINT,namespaces=['/a203a'])
+        sio.emit("roomjoin",turtlebotId,namespace='/a203a')
+
         self.subscription = self.create_subscription(
-            String,
-            'topic',
+            BatteryState,
+            'battery_state',
             self.listener_callback,
             10)
         self.subscription  # prevent unused variable warning
-
+        
+        timer_period = 60
+        self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.battery_msg = BatteryState()
     def listener_callback(self, msg):
-        self.get_logger().info('I heard: "%s"' % msg.data)
+        self.battery_msg = msg
+    def timer_callback(self):
+        msg = {"id":turtlebotId, "battery":self.battery_msg.percentage}
+        sio.emit("batteryState",json.dumps(msg),namespace='/a203a')
 
 
 def main(args=None):
     rclpy.init(args=args)
 
+    global minimal_subscriber
     minimal_subscriber = MinimalSubscriber()
 
     rclpy.spin(minimal_subscriber)
@@ -46,6 +72,18 @@ def main(args=None):
     minimal_subscriber.destroy_node()
     rclpy.shutdown()
 
+@sio.event
+def connect():
+    print('connection established')
 
+@sio.event
+def disconnect():
+    print('disconnected from server')
+
+@sio.on("sendBattery")
+def sendBattery():
+    msg = {"id":turtlebotId, "battery":minimal_subscriber.battery_msg.percentage}
+    sio.emit("batteryState",json.dumps(msg),namespace='/a203a')
+    
 if __name__ == '__main__':
     main()

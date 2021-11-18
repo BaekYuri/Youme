@@ -87,12 +87,12 @@ router.post('/entroll',isLoggedIn, upload,  async (req, res, next)=>{
     try{
         let audio = fs.readFileSync('uploads/hello2.wav')
         const speakerId = await UsersYoume.findOne({
-            attributes:['SpeakerId']
-        },{
+            attributes:['SpeakerId'],
             where:{
-                UserId : req.user.UserId
+                UserId : req.user.id
             }
         })
+        console.log(speakerId.SpeakerId)
         enrollProfileAudio(audio, speakerId.SpeakerId)
         res.status(200).send('success')
     }catch (error) {

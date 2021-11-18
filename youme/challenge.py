@@ -8,15 +8,14 @@ import random
 import json
 import pygame
 
+from connection import url
 import take_photo
 import upload
-
-from youme_main import user_id
 
 # user_id = 3
 headers = {'Content-Type': 'application/json; charset=utf-8'}
 # data = {'userId': user_id}
-url = 'http://112.169.87.3:8005'
+# url = 'http://112.169.87.3:8005'
 
 pygame.mixer.init()
 pygame.mixer.music.set_volume(0.3)

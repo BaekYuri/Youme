@@ -6,8 +6,9 @@ import time
 import random
 import pygame
 import serial
-
+import ast
 # module
+from connection import url
 import routine
 import challenge
 import weather
@@ -32,7 +33,6 @@ import pyaudio
 import queue
 import asyncio
 import socketio
-# from socketIO_client import SocketIO, BaseNamespace
 import requests
 import json
 
@@ -43,15 +43,19 @@ sio = socketio.Client()
 
 RATE = 8000
 CHUNK = int(RATE / 10)
+FRAME = []
+ENDPOINT = "https://mymespeakers.cognitiveservices.azure.com"
+KEY = "1df5d6a47a8e4ccfacf5003d460f9fa7"
 
 email = 'oogab@naver.com'
 password = 'test123!'
 
 cookies = ''
 user_id = ''
-
-# url = 'http://k5a203.p.ssafy.io:8005'
-url = 'http://112.169.87.3:8005'
+connectedSpeaker = False
+speakerId = ''
+# url = 'https://k5a203.p.ssafy.io'
+# url = 'http://112.169.87.3:8005'
 
 stop_stream = False
 
@@ -101,9 +105,11 @@ class MicrophoneStream(object):
         return self.isPause
 
     def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
+        global FRAME
         # Continuously collect data from the audio stream, into the buffer.
         if self.isPause == False:
             self._buff.put(in_data)
+            FRAME.append(in_data)
         # else
         # self._buff.put(in_data)
         return None, pyaudio.paContinue
@@ -131,6 +137,9 @@ def listen_print_loop(responses):
     global mic
     global user_id
     global light_mode
+    global FRAME
+    global speakerId
+    global connectedSpeaker
     num_chars_printed = 0
     call_youme = False
     pygame.mixer.init()
@@ -156,7 +165,11 @@ def listen_print_loop(responses):
 
             num_chars_printed = len(transcript)
         elif call_youme == False:
+
+
             print(transcript + overwrite_chars)
+            
+            
 
             if re.search(r'\b(명령 끝)\b', transcript, re.I):
                 print('Exiting..')
@@ -175,22 +188,62 @@ def listen_print_loop(responses):
             num_chars_printed = 0
         else:
             print(transcript + overwrite_chars)
-            
+
             if re.search(r'\b(명령 끝)\b', transcript, re.I):
                 print('Exiting..')
                 break
 
             if re.search(r'\b(루틴)\b', transcript, re.I):
-                script = routine.routine_query(transcript, user_id)
-                tts(script, 0)
+                found = True
+                if connectedSpeaker and speakerId :
+                    data = b''.join(FRAME)
+                    headers={'Content-Type':'audio/wav; codecs=audio/pcm; samplerate=16000','Ocp-Apim-Subscription-Key':KEY}
+                    rs = requests.post(ENDPOINT+'/speaker/identification/v2.0/text-independent/profiles/identifySingleSpeaker?profileIds='+speakerId,data=data,headers=headers)
+                    FRAME=[]
+                    mydata = rs.content.decode('utf-8')
+                    mydata = ast.literal_eval(mydata)
+                    if mydata['identifiedProfile']['profileId'] != speakerId:
+                        found = False
+                if found : 
+                    script = routine.routine_query(transcript, user_id)
+                    tts(script, 0)
+                else :
+                    tts("응답 알려줄 수 없어요!", 0)
 
             elif re.search(r'\b((챌|첼)린지)\b', transcript, re.I):
-                script = challenge.challenge_query(transcript, user_id)
-                tts(script, 0)
+                found = True
+                if connectedSpeaker and speakerId :
+                    data = b''.join(FRAME)
+                    headers={'Content-Type':'audio/wav; codecs=audio/pcm; samplerate=16000','Ocp-Apim-Subscription-Key':KEY}
+                    rs = requests.post(ENDPOINT+'/speaker/identification/v2.0/text-independent/profiles/identifySingleSpeaker?profileIds='+speakerId,data=data,headers=headers)
+                    FRAME=[]
+                    mydata = rs.content.decode('utf-8')
+                    mydata = ast.literal_eval(mydata)
+                    if mydata['identifiedProfile']['profileId'] != speakerId:
+                        found = False
+                
+                if found : 
+                    script = challenge.challenge_query(transcript, user_id)
+                    tts(script, 0)
+                else :
+                    tts("응답 알려줄 수 없어요!", 0)
             
-            elif re.search(r'\b(일정)\b', transcript, re.I):
-                script = mySchedule.schedule_query(transcript, user_id)
-                tts(script, 0)
+            elif re.search(r'\b(일정|스케줄))\b', transcript, re.I):
+                found = True
+                if connectedSpeaker and speakerId :
+                    data = b''.join(FRAME)
+                    headers={'Content-Type':'audio/wav; codecs=audio/pcm; samplerate=16000','Ocp-Apim-Subscription-Key':KEY}
+                    rs = requests.post(ENDPOINT+'/speaker/identification/v2.0/text-independent/profiles/identifySingleSpeaker?profileIds='+speakerId,data=data,headers=headers)
+                    FRAME=[]
+                    mydata = rs.content.decode('utf-8')
+                    mydata = ast.literal_eval(mydata)
+                    if mydata['identifiedProfile']['profileId'] != speakerId:
+                        found = False
+                if found : 
+                    script = mySchedule.schedule_query(transcript, user_id)
+                    tts(script, 0)
+                else :
+                    tts("응답 알려줄 수 없어요!", 0)
             
             elif re.search(r'\b(날씨|미세 먼지|미세먼지)\b', transcript, re.I):
                 script = weather.weather_query(transcript)
@@ -199,28 +252,7 @@ def listen_print_loop(responses):
             elif re.search(r'\b(검색)\b', transcript, re.I):
                 script = search.search_query(transcript)
                 tts(script, 2)
-
-            elif re.search(r'\b(소켓)\b', transcript, re.I):
-                global sio
-                sio.emit('message', '소켓 메세지 입니다.', namespace='/a203a')
-                tts('응답 알겠습니다.', 0)
-
-            elif re.search(r'\b(고마워)\b', transcript, re.I):
-                rint = random.randrange(0, 2)
-                expression_index = 3
-                if rint == 0:
-                    pygame.mixer.music.load("./replyMP3/gwaenchan.mp3")
-                    pygame.mixer.music.play()
-                    while pygame.mixer.music.get_busy() == True:
-                        mic.pause()
-                    mic.resume()
-                else:
-                    pygame.mixer.music.load("./replyMP3/jaeil.mp3")
-                    pygame.mixer.music.play()
-                    while pygame.mixer.music.get_busy() == True:
-                        mic.pause()
-                    mic.resume()
-
+           
             elif re.search(r'\b(불([가-힣]| )*켜([가-힣]| )*)\b', transcript, re.I):
                 light_mode = 0 # turn on
                 tts('응답 알겠습니다.', 0)
@@ -243,7 +275,8 @@ def listen_print_loop(responses):
                 }
                 data = {'message': transcript, 'userId': user_id}
                 res = requests.post(url+'/youme/textQuery', headers=headers, data=json.dumps(data))
-                tts(res.text, 0)
+                result =  res.json()
+                tts(result['message'], result['type'])
             call_youme = False
             expression_index = 1
 
@@ -289,12 +322,6 @@ def stt():
 def connect():
     print('connected!')
 
-"""
-@sio.on('sendNowMode', namespace='/a203a')
-def sendNowMode(data):
-    print(data)
-"""
-
 @sio.on('moveResult', namespace='/a203a')
 def moveResult(data):
     # print(data)
@@ -308,7 +335,6 @@ def moveResult(data):
             ser.write(b'3')
             tts('응답 불을 껐습니다.', 0)
         
-
     elif data['destination'] == 1 and data['status'] == 'success':
         ser.write(b'1')
         tts('응답 커피 내릴게요!', 0)
@@ -326,7 +352,9 @@ def moveResult(data):
 #
 # 0 : normalTalking
 # 1 : heartTalking
-#
+# 2 : normalTalking mic live
+# 3 : thanksTalking
+# 7 : dissapointTalking
 #
 def tts(talk, mode):
     global mic
@@ -359,6 +387,15 @@ def tts(talk, mode):
         out.write(response.audio_content)
         print('Audio content written to file "output.mp3"')
 
+    if mode == 'Listen':
+        mode = 7
+    elif mode == 'GotoOutside':
+        mode = 4
+    elif mode == 'Thanks':
+        mode = 3
+    elif mode == 'ComeHome':
+        mode = 5
+
     # 생성된 output.mp3 파일 실행
     pygame.mixer.music.load("output.mp3")
     pygame.mixer.music.play()
@@ -370,7 +407,32 @@ def tts(talk, mode):
             heartTalking()
         elif mode == 2:
             normalTalking()
+        elif mode == 3:
+            mic.pause()
+            thanksTalking()
+        elif mode == 4 or mode ==  5:
+            mic.pause()
+            smileTalking()
+        elif mode == 7:
+            mic.pause()
+            dissapointTalking()
+
     mic.resume()
+
+def smileTalking():
+    global expression_index
+    expression_index = 3
+
+def thanksTalking():
+    global expression_index
+    expression_index = 6
+    time.sleep(0.3)
+    expression_index = 1
+    time.sleep(0.3)
+
+def dissapointTalking():
+    global expression_index
+    expression_index = 7
 
 def normalTalking():
     global mic
@@ -489,7 +551,8 @@ def login():
             cookies = response.cookies
             headers = session.headers
             user_id = response.json()["id"]
-
+            connectedSpeaker = response.json()["connectedSpeaker"]
+            speakerId = response.json()["speakerId"]
             if response.status_code == 200:
                 global sio
                 print('로그인 성공!')
@@ -566,4 +629,3 @@ if __name__ == "__main__":
 
     # 프로그램을 이벤트 루프로 진입시키는(프로그램을 작동시키는) 코드
     app.exec_()
-    stt_t.join()
