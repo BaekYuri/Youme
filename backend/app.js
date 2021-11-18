@@ -29,6 +29,9 @@ const routinizedHabitRouter = require('./routes/routinizedHabit')
 const habitRouter = require('./routes/habit')
 const scheduleRouter = require('./routes/schedule')
 const weatherRouter = require('./routes/weather')
+const UsersYoumeRouter = require('./routes/usersYoume')
+const TurtlebotPointRouter = require('./routes/turtlebotPoint')
+
 
 app.set('port', process.env.PORT || 3065)
 passportConfig()
@@ -73,6 +76,7 @@ app.use(cors({
   credentials: true,
 }))
 
+
 app.use('/', indexRouter)
 app.use('/user', userRouter)
 app.use('/challenge', challengeRouter)
@@ -82,6 +86,8 @@ app.use('/routinizedHabit', routinizedHabitRouter)
 app.use('/habit', habitRouter)
 app.use('/schedule',scheduleRouter)
 app.use('/weather',weatherRouter)
+app.use('/usersYoume',UsersYoumeRouter)
+app.use('/turtlebotPoint',TurtlebotPointRouter)
 
 app.use((req, res, next) => {
   // req.data = 'wook비번' // middleware간 data 전송

@@ -1,2 +1,12 @@
-photo
 __pycache__
+dist
+build
+
+test.*
+
+speechtotext-329116-9cb59c0b35ad.json
+texttospeech-329102-3cb6aa381586.json
+youme-330304-0c76fd719355.json
+
+reply*
+photo

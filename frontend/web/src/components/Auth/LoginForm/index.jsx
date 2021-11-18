@@ -15,7 +15,7 @@ import {
 import AccountBoxRoundedIcon from '@material-ui/icons/AccountBoxRounded';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { CHANGE_SIGN_UP_MODE, loginRequestAction } from '../../../reducers/user';
+import { CHANGE_SIGN_UP_MODE, loginRequestAction, GET_YOUME_INFO_REQUEST } from '../../../reducers/user';
 import { OPEN_CONFIRM_MODAL } from '../../../reducers/modal';
 import { Visibility, VisibilityOff } from '@material-ui/icons';
 
@@ -24,7 +24,7 @@ const regExpPw = /(?=.*\d{1,50})(?=.*[~`!@#$%\^&*()-+=]{1,50})(?=.*[a-zA-Z]{2,50
 
 const LoginForm = () => {
   const dispatch = useDispatch()
-  const { logInDone, logInError } = useSelector((state) => state.user)
+  const { logInDone, logInError, getYoumeInfoDone, me, youmeInfo } = useSelector((state) => state.user)
 
   const [email, setEmail] = useState('')
   const onChangeEmail = useCallback((e) => {
@@ -92,13 +92,18 @@ const LoginForm = () => {
   }, [email, password]);
 
   useEffect(() => {
+    if (logInDone) {
+      dispatch({
+        type : GET_YOUME_INFO_REQUEST
+      })
+    }
     if (logInError) {
       dispatch({
         type: OPEN_CONFIRM_MODAL,
         message: logInError
       })
     }
-  }, [logInDone, logInError, dispatch])
+  }, [logInDone, logInError,getYoumeInfoDone, dispatch])
 
   return (
     <Container maxWidth="xs" style={{margin: '0 20px', padding: '20px', background: '#ffffff', border: 'solid 1px #eeeeee', borderRadius: '10px', boxShadow: '2px 2px 2px #eeeeee'}}>

@@ -150,9 +150,9 @@ router.get('/', async (req, res, next) => { // GET /challenge
  router.get('/new', async (req, res, next) => { // GET /challenge/new
   try {
     const d = new Date()
-    const where = { createdAt: { [Op.gt]: d.getDate() - 7 } }
+    console.log(d.getDate())
+    const where = { createdAt: { [Op.gt]: d.getDate() - 7 }, end_date:{[Op.gt]:d} }
     const challenges = await Challenge.findAll({
-      where,
       order: [
         ['createdAt', 'DESC']
       ],
@@ -169,7 +169,8 @@ router.get('/', async (req, res, next) => { // GET /challenge
         model: User,
         as: 'Likers',
         attributes: ['id']
-      }]
+      }],
+      where : where
     })
     res.status(200).json(challenges)
   } catch (error) {

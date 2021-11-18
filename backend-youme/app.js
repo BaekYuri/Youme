@@ -10,6 +10,12 @@ dotenv.config();
 const webSocket = require('./socket');
 const indexRouter = require('./routes');
 const userRouter = require('./routes/user')
+const routineRouter = require('./routes/routine')
+const challengeRouter = require('./routes/challenge')
+const scheduleRouter = require('./routes/schedule')
+const weatherRouter = require('./routes/weather')
+const searchRouter = require('./routes/search')
+const youmeRouter = require('./routes/youme')
 
 const app = express();
 app.set('port', process.env.PORT || 8005);
@@ -34,20 +40,16 @@ app.use(session({
   },
 }));
 
-const { sequelize } = require('./models')
+
 
 app.use('/', indexRouter);
 app.use('/user', userRouter)
-
-app.use('/youme', (req, res, next) => {
-  try {
-    console.log(req.body.message)
-    res.send('reply')
-  } catch (error) {
-    console.error(error)
-    next(error)
-  }
-})
+app.use('/routine', routineRouter)
+app.use('/challenge', challengeRouter)
+app.use('/schedule', scheduleRouter)
+app.use('/weather', weatherRouter)
+app.use('/search', searchRouter)
+app.use('/youme', youmeRouter)
 
 app.use((req, res, next) => {
   const error =  new Error(`${req.method} ${req.url} 라우터가 없습니다.`);

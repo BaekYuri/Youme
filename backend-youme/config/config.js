@@ -7,7 +7,8 @@ module.exports = {
     "password": process.env.DB_PASSWORD,
     "database": "myme_development",
     "host": "ssafy-pjt1-dbserver.cotmr33tcon0.ap-northeast-2.rds.amazonaws.com",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "timezone": "+09:00"
   },
   "test": {
     "username": "root",
@@ -21,6 +22,7 @@ module.exports = {
     "password": process.env.DB_PASSWORD,
     "database": "myme_development",
     "host": "ssafy-pjt1-dbserver.cotmr33tcon0.ap-northeast-2.rds.amazonaws.com",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "timezone": "+09:00"
   }
 }

@@ -2,6 +2,7 @@ import { withStyles } from '@material-ui/core/';
 import { teal } from '@material-ui/core/colors';
 
 export const backUrl = 'https://api.myme.today';
+export const socketUrl = "https://k5a203.p.ssafy.io"
 
 export const categories = [
   {

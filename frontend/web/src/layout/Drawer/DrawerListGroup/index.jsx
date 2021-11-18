@@ -2,7 +2,7 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 import { useHistory, NavLink } from 'react-router-dom';
 
 import { useDispatch, useSelector } from 'react-redux';
-import {ExpandMore, HomeRounded, EventNoteRounded, GavelRounded, FaceRounded} from '@material-ui/icons';
+import {ExpandMore, HomeRounded, EventNoteRounded, GavelRounded, FaceRounded, ChildCareRounded} from '@material-ui/icons';
 import InsertEmoticonIcon from '@material-ui/icons/InsertEmoticon';
 import {
   List,
@@ -94,6 +94,18 @@ const DrawerListGroup = (props) => {
                     />
                   </ListItem>
                   </NavLink>
+                  <NavLink to="/YoumeSetting" className='router'
+                    activeClassName='active-router' onClick={onMovePage}>
+                  <ListItem
+                    button
+                    key={'YoumeSetting'}
+                  >
+                    <ListItemText
+                      primary={'유미(YOUME) 설정'}
+                      disableTypography
+                    />
+                  </ListItem>
+                  </NavLink>
                   {/* <NavLink to="/ChangePassword" className='router'
                     activeClassName='active-router' onClick={onMovePage}>
                     <ListItem
@@ -168,6 +180,16 @@ const DrawerListGroup = (props) => {
           >
             <ListItemIcon><FaceRounded/></ListItemIcon>
             <ListItemText primary={'습관 관리'} disableTypography />
+          </ListItem>
+        </NavLink>
+        <NavLink to="/ManageYoume" className='router'
+        activeClassName='active-router' onClick={onMovePage}>
+          <ListItem
+            button
+            key={'ManageYoume'}
+          >
+            <ListItemIcon><ChildCareRounded/></ListItemIcon>
+            <ListItemText primary={'유미(YOUME) 관리'} disableTypography />
           </ListItem>
         </NavLink>
           </Fragment>

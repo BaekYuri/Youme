@@ -5,16 +5,18 @@ import RefreshIcon from '@material-ui/icons/Refresh';
 import TodayRoutineTab from './TodayRoutineTab/'
 import MySchedule from './MySchedule/'
 import { LOAD_TODAY_ROUTINES_REQUEST, SET_CHOOSED_ROUTINE } from '../../reducers/routine';
+import { GET_TURTLEBOT_POINT_REQUEST,GET_FAMILIARITY_REQUEST, CLEAR_GET_FAMILIARITY } from '../../reducers/user';
 import { LOAD_MY_CHALLENGES_REQUEST } from '../../reducers/challenge';
 import { LOAD_EVENT_REQUEST } from '../../reducers/calendar';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import {LocalMoviesRounded, EventAvailableRounded} from '@material-ui/icons'
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 
 import {Tabs, Tab, Fab} from '@material-ui/core'
 import MyChallengeHome from './MyChallenge';
 const App = () => {
+  const {youmeInfo,getFamiliarityDone} = useSelector((state) => state.user)
   const dispatch = useDispatch()
   const classes = useStyles()
   let [tabValue, setTabValue] = useState(0)
@@ -30,8 +32,22 @@ const App = () => {
       type: LOAD_EVENT_REQUEST
     })
     dispatch({type: SET_CHOOSED_ROUTINE, idx:-1})
+    dispatch({
+      type:GET_TURTLEBOT_POINT_REQUEST,
+      data: youmeInfo?youmeInfo.YoumeId:""
+    })
+    dispatch({
+      type:GET_FAMILIARITY_REQUEST
+    })
   }, [dispatch])
-
+  
+  useEffect(()=>{
+    if(getFamiliarityDone){
+      dispatch({
+        type:CLEAR_GET_FAMILIARITY
+      })
+    }
+  },[getFamiliarityDone])
   const handleChange = (event, newValue) => {
     setTabValue(newValue);
   };
